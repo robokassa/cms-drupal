@@ -103,10 +103,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       'MrchLogin' => '',
       'pass1' => '',
       'pass2' => '',
-      'server_url_live' => 'https://auth.robokassa.ru/Merchant/Index.aspx',
-      'server_url_test' => 'https://auth.robokassa.ru/Merchant/Index.aspx',
       'hash_type' => 'md5',
-      'show_robokassa_fee_message' => TRUE,
       'allowed_currencies' => [],
       'logging' => '',
     ] + parent::defaultConfiguration();
@@ -120,7 +117,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
 
     $form['MrchLogin'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('login'),
+      '#title' => $this->t('Идентификатор клиента'),
       '#description' => t('Your robokassa login'),
       '#default_value' => $this->configuration['MrchLogin'],
       '#required' => TRUE,
@@ -140,18 +137,6 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#description' => t('Password 2'),
       '#default_value' => $this->configuration['pass2'],
       '#required' => TRUE,
-    ];
-
-    $form['server_url_live'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Server URL'),
-      '#default_value' => $this->configuration['server_url_live'],
-    ];
-
-    $form['server_url_test'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Server Test URL'),
-      '#default_value' => $this->configuration['server_url_test'],
     ];
 
     $form['hash_type'] = [
@@ -174,12 +159,6 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#title' => $this->t('Currencies'),
       '#options' => $this->paymentMethodsList(),
       '#default_value' => $this->configuration['allowed_currencies'],
-    ];
-
-    $form['show_robokassa_fee_message'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Show robokassa fee message'),
-      '#default_value' => $this->configuration['show_robokassa_fee_message'],
     ];
 
     $form['logging'] = [
@@ -205,10 +184,9 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       if (!empty($values['pass2'])) {
         $this->configuration['pass2'] = $values['pass2'];
       }
-      $this->configuration['server_url_live'] = $values['server_url_live'];
-      $this->configuration['server_url_test'] = $values['server_url_test'];
+      $this->configuration['request_url'] = $values['request_url'];
+      $this->configuration['request_url_test'] = $values['request_url_test'];
       $this->configuration['hash_type'] = $values['hash_type'];
-      $this->configuration['show_robokassa_fee_message'] = $values['show_robokassa_fee_message'];
       $this->configuration['allowed_currencies'] = $values['allowed_currencies'];
       $this->configuration['logging'] = $values['logging'];
     }
@@ -332,9 +310,6 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
           $data['InvId'],
           $this->configuration['pass2'],
         );
-        if (isset($data['shp_trx_id'])) {
-          $signature_data[] = 'shp_trx_id=' . $data['shp_trx_id'];
-        }
 
         $sign = hash($this->configuration['hash_type'], implode(':', $signature_data));
 
@@ -348,8 +323,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
 
     try {
       /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
-      $payment = $this->entityTypeManager->getStorage('commerce_payment')
-        ->load($data['shp_trx_id']);
+      $payment = $this->entityTypeManager->getStorage('commerce_payment');
     }
     catch (InvalidPluginDefinitionException $e) {
       $this->logger->warning('Missing transaction id.  POST data: !data', array('!data' => print_r($data, TRUE)));

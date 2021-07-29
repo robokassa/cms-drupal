@@ -34,13 +34,13 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
 
     $logging = $payment_gateway_configuration['logging'] == 0 ? false : true;
     $timeout = empty($payment_gateway_configuration['timeout']) ? null : $payment_gateway_configuration['timeout'];
-    $redirect_url = $payment_gateway_configuration['server_url_' . $payment->getPaymentGatewayMode()];
+    $redirect_url = 'https://auth.robokassa.ru/Merchant/Index.aspx';
     $form['#action'] = $redirect_url;
     $data["MerchantLogin"] = $payment_gateway_configuration['MrchLogin'];
     $amount = $payment->getOrder()->getTotalPrice();
     $data["OutSum"] = number_format($amount->getNumber(), 2, '.', '');
     $data["InvId"] = $payment->getOrderId();
-    $data["shp_trx_id"] = $payment->id();
+    $data["shp_label"] = 'drupal_official';
     // For test transactions.
     if ($payment->getPaymentGatewayMode() == 'test') {
       $data['IsTest'] = '1';
@@ -51,7 +51,7 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
       $data["OutSum"],
       $data["InvId"],
       $payment_gateway_configuration['pass1'],
-      'shp_trx_id=' . $data["shp_trx_id"],
+      'shp_label=' . "drupal_official",
     );
 
     // Calculate signature.
