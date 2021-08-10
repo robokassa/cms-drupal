@@ -1,25 +1,61 @@
-# Commerce Robokassa 8.x-2.x
+# Официальный модуль приема платежей Robokassa для Drupal Commerce (Alpha version)
+Данный модуль позволяет добавить на сайт способ оплаты через Робокассу.
+Для корректной работы модуля необходима регистрация в сервисе.
 
-This module contains basic integration with Robokassa.
-https://www.robokassa.ru
+Порядок регистрации описан в [документации Robokassa](https://docs.robokassa.ru/#7844)
 
-The module works with Drupal Commerce (https://drupal.org/project/commerce).
+### Возможности
+* Передача состава товаров в заказе для отправки чека клиенту и в налоговую (54-ФЗ);
+* Приём платежей в тестовом режиме;
+* Автоматическая смена статуса заказа;
+* ~~Автоматическое формирование итогового чека;~~
+* ~~Поддержка продажи через iframe~~
+* ~~Поддержка отправки второго чека и маркировки товара~~
+* ~~Поддержка продавцов из Казахстана~~
 
-# INSTALLATION:
-Before you'll start the installation process you must register on Robokassa
-https://www.robokassa.ru and create your own merchant.
+### Совместимость
+Drupal 8;
 
-1. Download the module from Drupal.org and extract it to your modules folder.
-2. Enable it.
-3. Go to /admin/commerce/config/payment-methods and edit Robokassa rule.
-4. Edit Payment method
-(Just click edit before 'Enable payment method: Robokassa payment').
-5. Setup the settings according your data from Robokassa. Please use POST 
-method only for Success/Fail/Result urls in Robokassa account.
+Commerce 2.x;
 
-That's it :)
+### Установка через панель управления
 
-Additional information:
-- Default Success url - /commerce_robokassa/commerce_robokassa/success
-- Default Fail url - /commerce_robokassa/commerce_robokassa/fail
-- Default Result url - /commerce_robokassa/commerce_robokassa/result
+"Управление" -> "Расширения" -> "Установить новый модуль" -> "Установить".
+
+### Ручная установка
+
+Добавить commerce_robokassa в папку modules
+
+### Настройка модуля
+
+1. Перейти в настройки модуля "Commerce" -> "Платёжные шлюзы" -> "Редактировать".
+Выбрать Robokassa и активировать модуль.
+2. Зайти в настройки модуля и указать обязательные данные:
+    * Название
+    * Название отображения
+    * Режим
+    * Идентификатор клиента
+    * Пароль №1
+    * Пароль №2
+    * Hash type согласно выбранному в ЛКК Робокассы
+    * Система налогообложения
+    * Признак способа расчёта
+    * Признак способа расчёта
+    * Налоговая ставка
+
+    Затем сохранить введенные параметры.
+
+3. В личном кабинете Robokassa ("мои магазины" - "настройки" - "технические настройки") указать:
+    * Result Url: /commerce_robokassa/second_rule/result
+    * Success Url: /commerce_robokassa/commerce_robokassa/success
+    * Fail Url: /commerce_robokassa/second_rule/fail
+
+### Уведомления об оплате
+
+Уведомление об оплате Robokassa отправляет автоматически, после успешного совершения платежа, на адрес Result URL, который был скопирован из настроек модуля и указан в технических настройках магазина. После получения уведомления, заказ в CMS изменит статус на тот, который указан в поле "Статус заказа после оплаты".
+При правильной настройке Robokassa самостоятельно сообщит в модуль статус оплаты, после чего статус заказа изменится согласно настройкам.
+
+### Changelog
+ = 0.0.1 =
+
+Релиз альфа-версии плагина

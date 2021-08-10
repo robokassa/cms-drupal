@@ -27,29 +27,28 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
     $totalPrice = $order->getTotalPrice();
     $userMail = $payment->getOrder()->getEmail();
 
-    foreach ($order->getItems() as $key => $order_item) {
-    $product_variation = $order_item->getPurchasedEntity();
-    $title = $product_variation->getTitle();
-}
-
-    $unitPrice = $order_item->getUnitPrice();
-    $quantity = $order_item->getQuantity();
-
     /** @var \Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface $payment_gateway_plugin */
     $payment_gateway_plugin = $payment->getPaymentGateway()->getPlugin();
     $data = [];
 
     $payment_gateway_configuration = $payment_gateway_plugin->getConfiguration();
     $receipt = [];
+    $items = [];
 
-      $items[] = [
-        'name' => $title,
-        'sum' => number_format($unitPrice->getNumber(), 2, '.', ''),
-        'quantity' => $quantity,
-        'payment_method' => $payment_gateway_configuration['payment_method'],
-        'payment_object' => $payment_gateway_configuration['payment_object'],
-        'tax' => $payment_gateway_configuration['tax']
-      ];
+    foreach ($order->getItems() as $key => $order_item){
+      $unitPrice = $order_item->getUnitPrice();
+      $quantity = $order_item->getQuantity();
+      $product_variation = $order_item->getPurchasedEntity();
+      $title = $product_variation->getTitle();
+    $items[] = [
+      'name' => $title,
+      'sum' => number_format($unitPrice->getNumber(), 2, '.', '') * $quantity,
+      'quantity' => $quantity,
+      'payment_method' => $payment_gateway_configuration['payment_method'],
+      'payment_object' => $payment_gateway_configuration['payment_object'],
+      'tax' => $payment_gateway_configuration['tax']
+    ];
+    }
 
     $redirect_url = 'https://auth.robokassa.ru/Merchant/Index.aspx';
     $form['#action'] = $redirect_url;
