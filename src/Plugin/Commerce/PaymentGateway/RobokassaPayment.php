@@ -140,17 +140,76 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
     ];
 
     $form['hash_type'] = [
-      '#type' => 'radios',
+      '#type' => 'select',
       '#title' => $this->t('Hash type'),
       '#options' => [
-        'md5' => 'md5',
-        'ripemd160' => 'ripemd160',
-        'sha1' => 'sha1',
-        'sha256' => 'sha256',
-        'sha384' => 'sha384',
-        'sha512' => 'sha512',
+        'md5' => 'MD5',
+        'ripemd160' => 'RIPEMD160',
+        'sha1' => 'SHA1',
+        'sha256' => 'SHA256',
+        'sha384' => 'SHA384',
+        'sha512' => 'SHA512',
       ],
       '#default_value' => $this->configuration['hash_type'],
+      '#required' => TRUE,
+    ];
+
+    $form['sno'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Система налогообложения'),
+      '#options' => [
+        'osn' => 'ОСН',
+        'usn_income' => 'Упрощенная СН (доходы)',
+        'usn_income_outcome' => 'Упрощенная СН (доходы минус расходы)',
+        'envd' => 'Единый налог на вмененный доход',
+        'esn' => 'Единый сельскохозяйственный налог',
+        'patent' => 'Патентная СН',
+      ],
+      '#default_value' => $this->configuration['sno'],
+      '#required' => TRUE,
+    ];
+
+    $form['payment_method'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Признак способа расчёта'),
+      '#options' => [
+        'full_prepayment' => 'Предоплата 100%',
+        'prepayment ' => 'Предоплата',
+        'advance' => 'Аванс',
+        'full_payment' => 'Полный расчёт',
+        'partial_payment' => 'Частичный расчёт и кредит',
+        'credit' => 'Передача в кредит',
+      ],
+      '#default_value' => $this->configuration['payment_method'],
+      '#required' => TRUE,
+    ];
+
+    $form['payment_object'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Признак способа расчёта'),
+      '#options' => [
+        'commodity' => 'Товар',
+        'excise' => 'Подакцизный товар',
+        'job' => 'Работа',
+        'service' => 'Услуга',
+        'payment' => 'Платёж',
+      ],
+      '#default_value' => $this->configuration['payment_object'],
+      '#required' => TRUE,
+    ];
+
+    $form['tax'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Налоговая ставка'),
+      '#options' => [
+        'none' => 'Без НДС',
+        'vat0' => 'НДС по ставке 0%',
+        'vat10' => 'НДС по ставке 10%',
+        'vat110' => 'НДС чека по расчетной ставке 10/110',
+        'vat20' => 'НДС чека по ставке 20%',
+        'vat120' => 'НДС чека по расчетной ставке 20/120',
+      ],
+      '#default_value' => $this->configuration['tax'],
       '#required' => TRUE,
     ];
 
@@ -187,6 +246,10 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       $this->configuration['request_url'] = $values['request_url'];
       $this->configuration['request_url_test'] = $values['request_url_test'];
       $this->configuration['hash_type'] = $values['hash_type'];
+      $this->configuration['sno'] = $values['sno'];
+      $this->configuration['payment_method'] = $values['payment_method'];
+      $this->configuration['payment_object'] = $values['payment_object'];
+      $this->configuration['tax'] = $values['tax'];
       $this->configuration['allowed_currencies'] = $values['allowed_currencies'];
       $this->configuration['logging'] = $values['logging'];
     }

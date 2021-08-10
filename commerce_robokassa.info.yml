@@ -1,6 +1,6 @@
-name: Commerce Robokassa
+name: Robokassa payment gateway for Commerce
 type: module
-description: Implements Robokassa.ru payment services for use with Drupal Commerce.
+description: В РАЗРАБОТКЕ
 package: Commerce (contrib)
 core: 8.x
 dependencies:

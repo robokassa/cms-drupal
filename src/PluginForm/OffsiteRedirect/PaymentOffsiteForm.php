@@ -8,6 +8,9 @@ use Drupal\commerce_price\Entity\Currency;
 use Drupal\commerce_price\Price;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_order\Entity\OrderItem;
+use Drupal\commerce_order\Plugin\Field\FieldType\AdjustmentItemList;
 
 class PaymentOffsiteForm extends BasePaymentOffsiteForm {
 
@@ -20,26 +23,44 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
     $payment = $this->entity;
     $payment->save();
+    $order = $payment->getOrder();
+    $totalPrice = $order->getTotalPrice();
+    $userMail = $payment->getOrder()->getEmail();
+
+    foreach ($order->getItems() as $key => $order_item) {
+    $product_variation = $order_item->getPurchasedEntity();
+    $title = $product_variation->getTitle();
+}
+
+    $unitPrice = $order_item->getUnitPrice();
+    $quantity = $order_item->getQuantity();
 
     /** @var \Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface $payment_gateway_plugin */
     $payment_gateway_plugin = $payment->getPaymentGateway()->getPlugin();
-
     $data = [];
 
     $payment_gateway_configuration = $payment_gateway_plugin->getConfiguration();
-    $user_name = $payment_gateway_configuration["MrchLogin"];
-    $password = $payment_gateway_configuration['pass1'];
-    $double_staged = !$form['#capture'];
-    $mode = $payment->getPaymentGatewayMode() == 'live' ? false : true;
+    $receipt = [];
 
-    $logging = $payment_gateway_configuration['logging'] == 0 ? false : true;
-    $timeout = empty($payment_gateway_configuration['timeout']) ? null : $payment_gateway_configuration['timeout'];
+      $items[] = [
+        'name' => $title,
+        'sum' => number_format($unitPrice->getNumber(), 2, '.', ''),
+        'quantity' => $quantity,
+        'payment_method' => $payment_gateway_configuration['payment_method'],
+        'payment_object' => $payment_gateway_configuration['payment_object'],
+        'tax' => $payment_gateway_configuration['tax']
+      ];
+
     $redirect_url = 'https://auth.robokassa.ru/Merchant/Index.aspx';
     $form['#action'] = $redirect_url;
     $data["MerchantLogin"] = $payment_gateway_configuration['MrchLogin'];
-    $amount = $payment->getOrder()->getTotalPrice();
-    $data["OutSum"] = number_format($amount->getNumber(), 2, '.', '');
+    $data["OutSum"] = number_format($totalPrice->getNumber(), 2, '.', '');
     $data["InvId"] = $payment->getOrderId();
+    $data["email"] = $userMail;
+    $data['receipt'] = $receipt[] = \urlencode(json_encode(array(
+      'sno' => $payment_gateway_configuration['sno'],
+      'items' => $items
+    )));
     $data["shp_label"] = 'drupal_official';
     // For test transactions.
     if ($payment->getPaymentGatewayMode() == 'test') {
@@ -50,20 +71,16 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
       $data["MerchantLogin"],
       $data["OutSum"],
       $data["InvId"],
+      $data['receipt'] = $receipt[] = \urlencode(json_encode(array(
+      'sno' => $payment_gateway_configuration['sno'],
+      'items' => $items
+    ))),
       $payment_gateway_configuration['pass1'],
       'shp_label=' . "drupal_official",
     );
 
     // Calculate signature.
     $data['SignatureValue'] = hash($payment_gateway_configuration['hash_type'], implode(':', $signature_data));
-
-    $inv_desc_params = array(
-      '@order_id' => $payment->getOrderId(),
-      '@mail' => $payment->getOrder()->getEmail(),
-    );
-
-    $inv_desc = t('Order ID: @order_id, User mail: @mail', $inv_desc_params);
-    $data['InvDesc'] = Unicode::truncate($inv_desc, 100);
 
     if (isset($payment->getOrder()->getData('commerce_robokassa')['IncCurrLabel'])) {
       $data['IncCurrLabel'] = $payment->getOrder()->getData('commerce_robokassa')['IncCurrLabel'];
