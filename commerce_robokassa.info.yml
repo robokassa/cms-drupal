@@ -1,6 +1,6 @@
 name: Robokassa payment gateway for Commerce
 type: module
-description: В РАЗРАБОТКЕ
+description: aplha version
 package: Commerce (contrib)
 core: 8.x
 dependencies:
