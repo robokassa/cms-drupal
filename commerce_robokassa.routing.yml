@@ -1,10 +1,10 @@
-commerce_robokassa.status:
-  path: '/commerce_robokassa/{commerce_payment_gateway}/{status}'
+robokassa.status:
+  path: '/robokassa/result'
   defaults:
-    _controller: '\Drupal\commerce_robokassa\Controller\RobokassaStatusController::statusPage'
+    _controller: '\Drupal\robokassa\Controller\RobokassaStatusController::statusPage'
   requirements:
-    _custom_access: '\Drupal\commerce_robokassa\Controller\RobokassaStatusController::checkAccess'
-  options:
-    parameters:
-      commerce_payment_gateway:
-        type: entity:commerce_payment_gateway
+    _custom_access: '\Drupal\robokassa\Controller\RobokassaStatusController::checkAccess'
+#  options:
+#    parameters:
+#      commerce_payment_gateway:
+#        type: entity:commerce_payment_gateway

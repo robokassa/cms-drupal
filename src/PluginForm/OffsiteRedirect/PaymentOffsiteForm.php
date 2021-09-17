@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\commerce_robokassa\PluginForm\OffsiteRedirect;
+namespace Drupal\robokassa\PluginForm\OffsiteRedirect;
 
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\commerce_price\Calculator;
@@ -81,8 +81,8 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
     // Calculate signature.
     $data['SignatureValue'] = hash($payment_gateway_configuration['hash_type'], implode(':', $signature_data));
 
-    if (isset($payment->getOrder()->getData('commerce_robokassa')['IncCurrLabel'])) {
-      $data['IncCurrLabel'] = $payment->getOrder()->getData('commerce_robokassa')['IncCurrLabel'];
+    if (isset($payment->getOrder()->getData('robokassa')['IncCurrLabel'])) {
+      $data['IncCurrLabel'] = $payment->getOrder()->getData('robokassa')['IncCurrLabel'];
     }
 
     $payment->save();
@@ -90,5 +90,4 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm {
 
     return $this->buildRedirectForm($form, $form_state, $redirect_url, $data, self::REDIRECT_POST);
   }
-
 }

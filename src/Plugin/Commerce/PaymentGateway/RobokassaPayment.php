@@ -1,12 +1,13 @@
 <?php
 
-namespace Drupal\commerce_robokassa\Plugin\Commerce\PaymentGateway;
+namespace Drupal\robokassa\Plugin\Commerce\PaymentGateway;
 
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
+use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayInterface;
 use Drupal\commerce_price\Entity\Currency;
 use Drupal\commerce_price\Price;
 use Drupal\commerce_price\RounderInterface;
@@ -20,6 +21,7 @@ use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Provides the Off-site Robokassa payment gateway.
@@ -29,7 +31,7 @@ use Symfony\Component\HttpFoundation\Request;
  *   label = "Robokassa payment",
  *   display_label = "Robokassa",
  *   forms = {
- *     "offsite-payment" = "Drupal\commerce_robokassa\PluginForm\OffsiteRedirect\PaymentOffsiteForm",
+ *     "offsite-payment" = "Drupal\robokassa\PluginForm\OffsiteRedirect\PaymentOffsiteForm",
  *   },
  *   payment_method_types = {"credit_card"},
  *   credit_card_types = {
@@ -91,7 +93,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       $container->get('commerce_price.rounder'),
       $container->get('language_manager'),
       $container->get('http_client'),
-      $container->get('logger.factory')->get('commerce_robokassa')
+      $container->get('logger.factory')->get('robokassa')
     );
   }
 
@@ -213,12 +215,12 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#required' => TRUE,
     ];
 
-    $form['allowed_currencies'] = [
-      '#type' => 'checkboxes',
-      '#title' => $this->t('Currencies'),
-      '#options' => $this->paymentMethodsList(),
-      '#default_value' => $this->configuration['allowed_currencies'],
-    ];
+//    $form['allowed_currencies'] = [
+//      '#type' => 'checkboxes',
+//      '#title' => $this->t('Currencies'),
+//      '#options' => $this->paymentMethodsList(),
+//      '#default_value' => $this->configuration['allowed_currencies'],
+//    ];
 
     $form['logging'] = [
       '#type' => 'checkbox',
@@ -255,51 +257,43 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
     }
   }
 
-  function paymentMethodsList() {
-    $url = 'https://auth.robokassa.ru/Merchant/WebService/Service.asmx/GetCurrencies';
-    $data = [
-      'MerchantLogin' => $this->configuration['MrchLogin'],
-      'Language' => $this->languageManager->getCurrentLanguage()->getId() == 'ru' ? 'ru' : 'en',
-    ];
-    $response = $this->httpClient->get($url, ['query' => $data]);
-
-    $xmlstring = $response->getBody()->getContents();
-    $xml = simplexml_load_string($xmlstring, "SimpleXMLElement", LIBXML_NOCDATA);
-    $json = json_encode($xml);
-    $array = json_decode($json,TRUE);
-    $ret = [];
-
-    if (!isset($array['Groups'])) {
-      return $ret;
-    }
-
-    foreach($array['Groups'] as $groups) {
-      foreach($groups as $group) {
-        foreach($group['Items'] as $item) {
-          if (isset($item['@attributes'])) {
-            $item = array($item);
-          }
-          foreach($item as $currency) {
-            $ret[$currency['@attributes']['Label']] = $currency['@attributes']['Name'];
-          }
-        }
-      }
-    }
-
-    return $ret;
-  }
-
+//  function paymentMethodsList() {
+//    $url = 'https://auth.robokassa.ru/Merchant/WebService/Service.asmx/GetCurrencies';
+//    $data = [
+//      'MerchantLogin' => $this->configuration['MrchLogin'],
+//      'Language' => $this->languageManager->getCurrentLanguage()->getId() == 'ru' ? 'ru' : 'en',
+//    ];
+//    $response = $this->httpClient->get($url, ['query' => $data]);
+//
+//    $xmlstring = $response->getBody()->getContents();
+//    $xml = simplexml_load_string($xmlstring, "SimpleXMLElement", LIBXML_NOCDATA);
+//    $json = json_encode($xml);
+//    $array = json_decode($json,TRUE);
+//    $ret = [];
+//
+//    if (!isset($array['Groups'])) {
+//      return $ret;
+//    }
+//
+//    foreach($array['Groups'] as $groups) {
+//      foreach($groups as $group) {
+//        foreach($group['Items'] as $item) {
+//          if (isset($item['@attributes'])) {
+//            $item = array($item);
+//          }
+//          foreach($item as $currency) {
+//            $ret[$currency['@attributes']['Label']] = $currency['@attributes']['Name'];
+//          }
+//        }
+//      }
+//    }
+//
+//    return $ret;
+//  }
   /**
    * {@inheritdoc}
    */
-  public function onReturn(OrderInterface $order, Request $request) {
-    drupal_set_message($this->t('Payment was processed'));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function onNotify(Request $request) {
+    public function onNotify(Request $request) {
     /** @var PaymentInterface $payment */
     $payment = $this->doValidatePost($request);
 
@@ -307,8 +301,12 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       return FALSE;
     }
 
+    $data = $request->request->all();
     $payment->setState('completed');
     $payment->save();
+
+
+    echo 'OK' . $data['InvId'];
   }
 
   protected function doCancel(PaymentInterface $payment, array $status_response) {
@@ -372,6 +370,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
           $data['OutSum'],
           $data['InvId'],
           $this->configuration['pass2'],
+          'shp_label=' . "drupal_official",
         );
 
         $sign = hash($this->configuration['hash_type'], implode(':', $signature_data));
@@ -386,17 +385,18 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
 
     try {
       /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
-      $payment = $this->entityTypeManager->getStorage('commerce_payment');
+      $payment = $this->entityTypeManager->getStorage('commerce_payment')
+                                         ->load($data['InvId']);
     }
     catch (InvalidPluginDefinitionException $e) {
       $this->logger->warning('Missing transaction id.  POST data: !data', array('!data' => print_r($data, TRUE)));
       return FALSE;
     }
 
-    $amount = new Price($data['OutSum'], $payment->getAmount()->getCurrencyCode());
+    $amount = new Price($data['OutSum'], 'RUB');
 
     if (!$payment instanceof PaymentInterface) {
-      $this->logger->warning('Missing transaction id.  POST data: !data', array('!data' => print_r($data, TRUE)));
+      $this->logger->warning('Missing transaction id.  POST data: !data', array('!data',  print_r($data, TRUE)));
       return FALSE;
     }
 
