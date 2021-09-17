@@ -39,7 +39,8 @@ use Symfony\Component\HttpFoundation\Response;
  *   },
  * )
  */
-class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPaymentInterface {
+class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPaymentInterface
+{
 
   /**
    * The price rounder.
@@ -69,7 +70,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
    */
   protected $logger;
 
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, RounderInterface $rounder, LanguageManagerInterface $language_manager, Client $http_client, LoggerInterface $logger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, RounderInterface $rounder, LanguageManagerInterface $language_manager, Client $http_client, LoggerInterface $logger)
+  {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
     $this->rounder = $rounder;
@@ -81,7 +83,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition)
+  {
     return new static(
       $configuration,
       $plugin_id,
@@ -100,21 +103,23 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
   /**
    * {@inheritdoc}
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration()
+  {
     return [
-      'MrchLogin' => '',
-      'pass1' => '',
-      'pass2' => '',
-      'hash_type' => 'md5',
-      'allowed_currencies' => [],
-      'logging' => '',
-    ] + parent::defaultConfiguration();
+        'MrchLogin' => '',
+        'pass1' => '',
+        'pass2' => '',
+        'hash_type' => 'md5',
+        'allowed_currencies' => [],
+        'logging' => '',
+      ] + parent::defaultConfiguration();
   }
 
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state)
+  {
     $form = parent::buildConfigurationForm($form, $form_state);
 
     $form['MrchLogin'] = [
@@ -156,10 +161,22 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#required' => TRUE,
     ];
 
+    $form['country'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Страна магазина'),
+      '#options' => [
+        'RU' => 'Россия',
+        'KZ' => 'Казахстан',
+      ],
+      '#default_value' => $this->configuration['country'],
+      '#required' => TRUE,
+    ];
+
     $form['sno'] = [
       '#type' => 'select',
       '#title' => $this->t('Система налогообложения'),
       '#options' => [
+        'none' => 'Не выбрано',
         'osn' => 'ОСН',
         'usn_income' => 'Упрощенная СН (доходы)',
         'usn_income_outcome' => 'Упрощенная СН (доходы минус расходы)',
@@ -175,6 +192,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#type' => 'select',
       '#title' => $this->t('Признак способа расчёта'),
       '#options' => [
+        'none' => 'Не выбрано',
         'full_prepayment' => 'Предоплата 100%',
         'prepayment ' => 'Предоплата',
         'advance' => 'Аванс',
@@ -190,6 +208,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       '#type' => 'select',
       '#title' => $this->t('Признак способа расчёта'),
       '#options' => [
+        'none' => 'Не выбрано',
         'commodity' => 'Товар',
         'excise' => 'Подакцизный товар',
         'job' => 'Работа',
@@ -210,6 +229,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
         'vat110' => 'НДС чека по расчетной ставке 10/110',
         'vat20' => 'НДС чека по ставке 20%',
         'vat120' => 'НДС чека по расчетной ставке 20/120',
+        'vat12' => 'НДС по ставке 12% для клиентов из Казахстана',
       ],
       '#default_value' => $this->configuration['tax'],
       '#required' => TRUE,
@@ -234,7 +254,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state)
+  {
     parent::submitConfigurationForm($form, $form_state);
     if (!$form_state->getErrors()) {
       $values = $form_state->getValue($form['#parents']);
@@ -252,6 +273,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
       $this->configuration['payment_method'] = $values['payment_method'];
       $this->configuration['payment_object'] = $values['payment_object'];
       $this->configuration['tax'] = $values['tax'];
+      $this->configuration['country'] = $values['country'];
       $this->configuration['allowed_currencies'] = $values['allowed_currencies'];
       $this->configuration['logging'] = $values['logging'];
     }
@@ -293,7 +315,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
   /**
    * {@inheritdoc}
    */
-    public function onNotify(Request $request) {
+  public function onNotify(Request $request)
+  {
     /** @var PaymentInterface $payment */
     $payment = $this->doValidatePost($request);
 
@@ -309,7 +332,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
     echo 'OK' . $data['InvId'];
   }
 
-  protected function doCancel(PaymentInterface $payment, array $status_response) {
+  protected function doCancel(PaymentInterface $payment, array $status_response)
+  {
     $payment->setState('authorization_expired');
     $payment->save();
 
@@ -327,18 +351,19 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
    * @return bool|mixed
    *   Transaction according to POST data or due.
    */
-  public function doValidatePost(Request $request, $is_interaction = TRUE) {
+  public function doValidatePost(Request $request, $is_interaction = TRUE)
+  {
     $data = $request->request->all();
 
     // Exit now if the $_POST was empty.
     if (empty($data)) {
-     $this->logger->warning('Interaction URL accessed with no POST data submitted.');
+      $this->logger->warning('Interaction URL accessed with no POST data submitted.');
 
-     return FALSE;
+      return FALSE;
     }
 
     // Exit now if any required keys are not exists in $_POST.
-    $required_keys = array('OutSum','InvId');
+    $required_keys = array('OutSum', 'InvId');
     if ($is_interaction) {
       $required_keys[] = 'SignatureValue';
     }
@@ -386,9 +411,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
     try {
       /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
       $payment = $this->entityTypeManager->getStorage('commerce_payment')
-                                         ->load($data['InvId']);
-    }
-    catch (InvalidPluginDefinitionException $e) {
+        ->load($data['InvId']);
+    } catch (InvalidPluginDefinitionException $e) {
       $this->logger->warning('Missing transaction id.  POST data: !data', array('!data' => print_r($data, TRUE)));
       return FALSE;
     }
@@ -396,7 +420,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
     $amount = new Price($data['OutSum'], 'RUB');
 
     if (!$payment instanceof PaymentInterface) {
-      $this->logger->warning('Missing transaction id.  POST data: !data', array('!data',  print_r($data, TRUE)));
+      $this->logger->warning('Missing transaction id.  POST data: !data', array('!data', print_r($data, TRUE)));
       return FALSE;
     }
 
@@ -414,7 +438,8 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
    * @param object $transaction
    * @param int $remote_status
    */
-  public function setLocalState(PaymentInterface $payment, $remote_status) {
+  public function setLocalState(PaymentInterface $payment, $remote_status)
+  {
     switch ($remote_status) {
       case 'success':
         $payment->setState('completed');
