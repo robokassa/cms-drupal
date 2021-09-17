@@ -1,4 +1,4 @@
 services:
-  logger.channel.commerce_robokassa:
+  logger.channel.robokassa:
     parent: logger.channel_base
-    arguments: ['commerce_robokassa']
+    arguments: ['robokassa']
