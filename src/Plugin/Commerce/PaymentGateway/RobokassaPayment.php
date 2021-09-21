@@ -206,7 +206,7 @@ class RobokassaPayment extends OffsitePaymentGatewayBase implements RobokassaPay
 
     $form['payment_object'] = [
       '#type' => 'select',
-      '#title' => $this->t('Признак способа расчёта'),
+      '#title' => $this->t('Признак предмета расчёта'),
       '#options' => [
         'none' => 'Не выбрано',
         'commodity' => 'Товар',
