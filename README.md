@@ -8,7 +8,7 @@
 * Передача состава товаров в заказе для отправки чека клиенту и в налоговую (54-ФЗ);
 * Приём платежей в тестовом режиме;
 * Автоматическая смена статуса заказа;
-* Поддержка продавцов из Казахстана
+* Поддержка продавцов из Казахстана;
 * ~~Поддержка продажи через iframe~~
 * ~~Поддержка отправки второго чека и маркировки товара~~
 
@@ -46,9 +46,9 @@ Commerce 2.x;
 
 3. В личном кабинете Robokassa ("мои магазины" - "настройки" - "технические настройки") указать:
 
-Result Url - https://your-site/payment/notify/robokassa (метод POST)
-Success Url - https://your-site/robokassa/result (метод GET)
-Fail Url - https://your-site/robokassa/result (метод GET)
+   * Result Url - https://your-site/payment/notify/robokassa (метод POST)
+   * Success Url - https://your-site/robokassa/result (метод GET)
+   * Fail Url - https://your-site/robokassa/result (метод GET)
 
 ### Уведомления об оплате
 
