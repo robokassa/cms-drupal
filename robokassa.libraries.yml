@@ -1,0 +1,5 @@
+iframe:
+  js:
+    https://auth.robokassa.ru/Merchant/bundle/robokassa_iframe.js: {}
+  dependencies:
+    - core/jquery
