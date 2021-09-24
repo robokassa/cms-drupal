@@ -98,9 +98,41 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm
             $data['IncCurrLabel'] = $payment->getOrder()->getData('robokassa')['IncCurrLabel'];
         }
 
-        $payment->save();
 
+        if ($payment_gateway_configuration['robokassa_iframe'] == '1') {
+            $params = '';
+            $lastParam = end($data);
 
-        return $this->buildRedirectForm($form, $form_state, $redirect_url, $data, self::REDIRECT_POST);
+            foreach ($data as $inputName => $inputValue) {
+                if ($inputName != 'IsTest') {
+                    $value = htmlspecialchars($inputValue, ENT_COMPAT, 'UTF-8');
+
+                    if ($lastParam == $inputValue) {
+                        $params .= $inputName . ": '" . $value . "'";
+                    } else {
+                        $params .= $inputName . ": '" . $value . "', ";
+                    }
+                }
+            }
+
+            $form['#markup'] = 'Спасибо за ваш заказ, пожалуйста, нажмите ниже на кнопку, чтобы заплатить.<br>';
+            $form['#attached']['library'][] = 'robokassa/iframe';
+            $form['actions'] = [
+                '#type' => 'submit',
+                '#value' => 'Оплатить',
+                '#attributes' => [
+                    'id' => 'robokassa',
+                    'onmousedown' => "Robokassa.StartPayment({" . $params . "})"],
+            ];
+
+            $payment->save();
+
+            return $form;
+
+        } else {
+            $payment->save();
+
+            return $this->buildRedirectForm($form, $form_state, $redirect_url, $data, self::REDIRECT_POST);
+        }
     }
 }
