@@ -47,7 +47,7 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm
                 $redirect_url = 'https://auth.robokassa.ru/Merchant/Index.aspx';
                 $items[] = [
                     'name' => $title,
-                    'sum' => number_format($unitPrice->getNumber(), 2, '.', '') * $quantity,
+                    'cost' => number_format($unitPrice->getNumber(), 2, '.', ''),
                     'quantity' => $quantity,
                     'payment_method' => $payment_gateway_configuration['payment_method'],
                     'payment_object' => $payment_gateway_configuration['payment_object'],
@@ -58,7 +58,7 @@ class PaymentOffsiteForm extends BasePaymentOffsiteForm
                 $items[] = [
                     'name' => $title,
                     'quantity' => $quantity,
-                    'sum' => number_format($unitPrice->getNumber(), 2, '.', '') * $quantity,
+                    'cost' => number_format($unitPrice->getNumber(), 2, '.', ''),
                     'tax' => $payment_gateway_configuration['tax'],
                 ];
             }
